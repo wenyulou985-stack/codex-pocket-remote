@@ -1,0 +1,5 @@
+interface:
+  display_name: "Codex Pocket Remote"
+  short_description: "Set up private mobile control for Codex Desktop"
+  brand_color: "#18664B"
+  default_prompt: "Use $codex-pocket-remote to set up private mobile access to my Codex Desktop tasks."

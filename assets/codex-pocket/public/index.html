@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#f5f3ed" />
+    <meta name="description" content="在手机上查看并指导电脑中的 Codex 任务" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/icon-192.png" />
+    <link rel="stylesheet" href="/styles.css" />
+    <title>Codex Pocket</title>
+  </head>
+  <body>
+    <div id="auth" class="auth-screen" hidden>
+      <form id="auth-form" class="auth-card">
+        <div class="brand-mark" aria-hidden="true">C</div>
+        <p class="eyebrow">CODEX POCKET</p>
+        <h1>连接你的电脑</h1>
+        <p class="muted">输入电脑启动窗口里显示的访问令牌。令牌只保存在这台手机上。</p>
+        <label for="token-input">访问令牌</label>
+        <input id="token-input" name="token" autocomplete="off" required />
+        <button class="primary" type="submit">连接</button>
+        <p id="auth-error" class="error-text" role="alert"></p>
+      </form>
+    </div>
+
+    <main id="app" class="shell" hidden>
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">CODEX POCKET</p>
+          <h1>任务现场</h1>
+        </div>
+        <div class="topbar-actions">
+          <button id="install-app" class="install-button" type="button" hidden>安装 App</button>
+          <div class="connection" id="connection"><span></span><strong>连接中</strong></div>
+        </div>
+      </header>
+
+      <section id="overview" class="overview" aria-live="polite">
+        <div class="metric"><span>运行中</span><strong id="running-count">—</strong></div>
+        <div class="metric"><span>等待处理</span><strong id="approval-count">—</strong></div>
+        <div class="metric wide"><span>最近同步</span><strong id="last-sync">—</strong></div>
+      </section>
+
+      <section class="task-section">
+        <div class="section-heading">
+          <div><p class="eyebrow">你的电脑</p><h2>Codex 任务</h2></div>
+          <div class="heading-actions">
+            <button id="new-task" class="icon-button filled" type="button" aria-label="新建远程任务">＋</button>
+            <button id="refresh" class="icon-button" type="button" aria-label="刷新任务">↻</button>
+          </div>
+        </div>
+        <div id="task-list" class="task-list"><div class="skeleton tall"></div><div class="skeleton"></div></div>
+        <div id="empty-state" class="empty-state" hidden><strong>还没有找到任务</strong><span>先在电脑端创建或打开一个 Codex 任务。</span></div>
+      </section>
+    </main>
+
+    <section id="detail" class="detail" hidden aria-label="任务详情">
+      <header class="detail-header">
+        <button id="back" class="icon-button" type="button" aria-label="返回任务列表">←</button>
+        <div><p id="detail-path" class="eyebrow">任务</p><h2 id="detail-title">加载中</h2></div>
+        <button id="detail-refresh" class="icon-button" type="button" aria-label="刷新任务详情">↻</button>
+      </header>
+
+      <div class="detail-scroll">
+        <section class="status-card">
+          <div><span id="detail-status" class="status-badge">读取中</span><p id="detail-updated" class="muted">—</p></div>
+          <button id="interrupt" class="danger-text" type="button" hidden>中断执行</button>
+        </section>
+
+        <section id="approval-panel" class="approval-panel" hidden>
+          <p class="eyebrow">需要你的决定</p>
+          <div id="approval-list"></div>
+        </section>
+
+        <section class="timeline-section">
+          <div class="section-heading compact"><div><p class="eyebrow">实时记录</p><h2>最近活动</h2></div></div>
+          <div id="timeline" class="timeline"><div class="skeleton tall"></div></div>
+        </section>
+
+        <details class="git-panel">
+          <summary><span>Git 改动</span><strong id="git-count">读取中</strong></summary>
+          <div id="git-content" class="git-content"></div>
+        </details>
+      </div>
+
+      <form id="message-form" class="composer">
+        <label class="sr-only" for="message">给 Codex 发消息</label>
+        <textarea id="message" rows="1" maxlength="8000" placeholder="告诉 Codex 接下来怎么做…" required></textarea>
+        <button id="send" class="send-button" type="submit" aria-label="发送消息">↑</button>
+      </form>
+    </section>
+
+    <section id="new-task-dialog" class="task-dialog" role="dialog" aria-modal="true" aria-labelledby="new-task-title" hidden>
+      <form id="new-task-form" class="task-dialog-card">
+        <div class="dialog-heading">
+          <div><p class="eyebrow">远程启动</p><h2 id="new-task-title">新建 Codex 任务</h2></div>
+          <button id="close-new-task" class="icon-button" type="button" aria-label="关闭">×</button>
+        </div>
+        <p class="muted">从 Pocket 启动的任务可以持续显示运行状态，并在执行中接收你的新要求。</p>
+        <label for="task-cwd">项目文件夹</label>
+        <input id="task-cwd" name="cwd" list="recent-cwds" placeholder="C:\\Projects\\my-project" required />
+        <datalist id="recent-cwds"></datalist>
+        <label for="task-prompt">任务要求</label>
+        <textarea id="task-prompt" name="text" rows="5" maxlength="8000" placeholder="告诉 Codex 要完成什么…" required></textarea>
+        <button id="create-task" class="primary" type="submit">启动任务</button>
+        <p id="new-task-error" class="error-text" role="alert"></p>
+      </form>
+    </section>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>
