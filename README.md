@@ -10,6 +10,7 @@ The project grew from a practical need: leave a long Codex task running on a com
 
 - A mobile-friendly task timeline with terminal and internal work grouped and collapsed by default
 - Follow-up messages to tasks already open in Codex Desktop
+- Photos and files sent from the phone to the selected Codex task
 - Task interruption, refresh, recent activity, and file-change visibility
 - A PWA that can be installed from the phone browser
 - Loopback-only local service plus private HTTPS through Tailscale Serve
@@ -57,6 +58,8 @@ npm run remote:status
 ```
 
 Open the reported private HTTPS address on the phone and install it from the browser menu if desired.
+
+To send an attachment, open a task, tap the `+` button beside the message box, choose up to five photos or files, and send. Each file may be up to 15 MB, with a 25 MB combined limit. Uploads stay on the computer under the Git-ignored `.data/uploads` directory.
 
 ## Requirements
 

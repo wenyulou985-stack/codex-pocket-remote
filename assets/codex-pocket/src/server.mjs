@@ -7,6 +7,7 @@ import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { AppServerClient } from "./app-server-client.mjs";
 import { CodexAppToolsClient } from "./codex-app-tools-client.mjs";
+import { buildDesktopPrompt, decodeAttachments, MAX_MESSAGE_BODY_BYTES, saveAttachments } from "./attachments.mjs";
 
 const execFileAsync = promisify(execFile);
 const rootDir = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -36,7 +37,7 @@ const server = http.createServer(async (request, response) => {
     return await serveStatic(response, url.pathname);
   } catch (error) {
     console.error(error);
-    return json(response, 500, { error: friendlyError(error) });
+    return json(response, error.statusCode || 500, { error: friendlyError(error) });
   }
 });
 
@@ -106,14 +107,22 @@ async function handleApi(request, response, url) {
       return json(response, 200, { approvals: bridge.listApprovals(threadId) });
     }
     if (method === "POST" && action === "message") {
-      const body = await readJsonBody(request);
+      const body = await readJsonBody(request, MAX_MESSAGE_BODY_BYTES);
       const text = String(body.text || "").trim();
-      if (!text || text.length > 8000) return json(response, 400, { error: "消息长度需要在 1 到 8000 字之间。" });
+      const incomingAttachments = decodeAttachments(body.attachments);
+      if ((!text && !incomingAttachments.length) || text.length > 8000) {
+        return json(response, 400, { error: "请输入消息或选择附件；文字最多 8000 字。" });
+      }
+      const savedAttachments = await saveAttachments({ attachments: incomingAttachments, dataDir, threadId });
       try {
         const result = bridge.ownsThread(threadId)
-          ? await bridge.sendMessage(threadId, text)
-          : await sendToDesktopOrResume(threadId, text);
-        return json(response, 202, { accepted: true, ...result });
+          ? await bridge.sendMessage(threadId, text, savedAttachments)
+          : await sendToDesktopOrResume(threadId, text, savedAttachments);
+        return json(response, 202, {
+          accepted: true,
+          attachments: savedAttachments.map(({ name, type, size }) => ({ name, type, size })),
+          ...result,
+        });
       } catch (error) {
         if (/already has an active writer/i.test(error.message)) {
           return json(response, 409, {
@@ -146,12 +155,12 @@ async function handleApi(request, response, url) {
   return json(response, 404, { error: "接口不存在。" });
 }
 
-async function sendToDesktopOrResume(threadId, text) {
+async function sendToDesktopOrResume(threadId, text, attachments = []) {
   try {
-    return await desktopBridge.sendMessage(threadId, text);
+    return await desktopBridge.sendMessage(threadId, buildDesktopPrompt(text, attachments));
   } catch (desktopError) {
     try {
-      return await bridge.sendMessage(threadId, text);
+      return await bridge.sendMessage(threadId, text, attachments);
     } catch (directError) {
       if (/already has an active writer/i.test(directError.message)) {
         directError.message = `${directError.message}\n桌面控制通道：${desktopError.message}`;
@@ -292,11 +301,17 @@ function allowMutation(request) {
   return true;
 }
 
-async function readJsonBody(request) {
+async function readJsonBody(request, maxBytes = 100_000) {
   let raw = "";
+  let receivedBytes = 0;
   for await (const chunk of request) {
+    receivedBytes += Buffer.byteLength(chunk);
+    if (receivedBytes > maxBytes) {
+      const error = new Error("请求内容过大。");
+      error.statusCode = 413;
+      throw error;
+    }
     raw += chunk;
-    if (raw.length > 100_000) throw new Error("请求内容过大。");
   }
   try {
     return raw ? JSON.parse(raw) : {};

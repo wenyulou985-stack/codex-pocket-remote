@@ -22,6 +22,7 @@ Create a private phone control panel for Codex Desktop. The included template ca
 4. Do not solve the desktop `active writer` error by opening a second App Server writer. Use the bundled local `codex-app-tools` pipe for desktop-owned task writes.
 5. Keep the Codex desktop app and this bridge running while remote access is needed. Stop Tailscale Serve when the user no longer wants remote access.
 6. Request user action only when interactive sign-in is required or an external publication/installation lacks prior authorization. Explain the exact step and continue all independent setup first.
+7. Keep phone uploads under the Git-ignored `.data/uploads` directory. Enforce the bundled count and size limits, and never expose that directory through the static-file server.
 
 ## Completion criteria
 

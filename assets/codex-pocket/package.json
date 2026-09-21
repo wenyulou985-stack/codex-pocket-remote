@@ -1,6 +1,6 @@
 {
   "name": "codex-pocket",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "description": "A private mobile control panel for local Codex sessions.",
@@ -14,7 +14,7 @@
     "remote:off": "powershell -ExecutionPolicy Bypass -File scripts/disable-remote-access.ps1",
     "autostart:install": "powershell -ExecutionPolicy Bypass -File scripts/install-autostart.ps1",
     "autostart:remove": "powershell -ExecutionPolicy Bypass -File scripts/uninstall-autostart.ps1",
-    "check": "node --check src/server.mjs && node --check src/app-server-client.mjs && node --check src/codex-app-tools-client.mjs && node --check public/app.js && node --check public/service-worker.js",
+    "check": "node --check src/server.mjs && node --check src/app-server-client.mjs && node --check src/codex-app-tools-client.mjs && node --check src/attachments.mjs && node --check public/app.js && node --check public/service-worker.js",
     "test": "node --test"
   },
   "engines": {

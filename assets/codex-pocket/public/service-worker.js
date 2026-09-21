@@ -1,4 +1,4 @@
-const CACHE_NAME = "codex-pocket-v5";
+const CACHE_NAME = "codex-pocket-v6";
 const APP_SHELL = [
   "/",
   "/index.html",

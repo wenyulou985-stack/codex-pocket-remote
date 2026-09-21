@@ -86,9 +86,14 @@
       </div>
 
       <form id="message-form" class="composer">
-        <label class="sr-only" for="message">给 Codex 发消息</label>
-        <textarea id="message" rows="1" maxlength="8000" placeholder="告诉 Codex 接下来怎么做…" required></textarea>
-        <button id="send" class="send-button" type="submit" aria-label="发送消息">↑</button>
+        <div id="attachment-list" class="attachment-list" aria-live="polite" hidden></div>
+        <div class="composer-row">
+          <input id="attachment-input" class="sr-only" type="file" multiple />
+          <button id="attach" class="attach-button" type="button" aria-label="添加照片或文件" title="添加照片或文件">＋</button>
+          <label class="sr-only" for="message">给 Codex 发消息</label>
+          <textarea id="message" rows="1" maxlength="8000" placeholder="告诉 Codex 接下来怎么做…"></textarea>
+          <button id="send" class="send-button" type="submit" aria-label="发送消息">↑</button>
+        </div>
       </form>
     </section>
 

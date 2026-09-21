@@ -46,6 +46,8 @@ Open the reported `https://<device>.<tailnet>.ts.net/` address on the phone. Use
 
 Select the open task in the phone UI and send a harmless test such as `请回复：手机连接测试成功`. The bridge first uses the desktop app's local tools pipe so it does not compete for the App Server writer. It falls back only where the local environment supports it.
 
+To send photos or files, tap the `+` beside the message field. The phone may select up to five files per message. Images use the App Server's native local-image input when the bridge owns the task; other files are passed as local file mentions. Existing desktop-owned tasks receive the same local paths through the desktop control channel.
+
 ## Stop or remove
 
 ```powershell

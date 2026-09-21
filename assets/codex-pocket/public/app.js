@@ -7,6 +7,7 @@ const state = {
   installPrompt: null,
   terminalDisclosure: new Map(),
   workDisclosure: new Map(),
+  attachments: [],
 };
 
 const $ = (selector) => document.querySelector(selector);
@@ -63,6 +64,8 @@ function bindEvents() {
   $("#interrupt").addEventListener("click", interruptTask);
   $("#message-form").addEventListener("submit", sendMessage);
   $("#message").addEventListener("input", autoGrow);
+  $("#attach").addEventListener("click", () => $("#attachment-input").click());
+  $("#attachment-input").addEventListener("change", addAttachments);
   window.addEventListener("popstate", () => state.selectedId ? closeDetail(false) : null);
 }
 
@@ -490,19 +493,104 @@ async function sendMessage(event) {
   const input = $("#message");
   const button = $("#send");
   const text = input.value.trim();
-  if (!text || !state.selectedId) return;
+  if ((!text && !state.attachments.length) || !state.selectedId) return;
   button.disabled = true;
+  $("#attach").disabled = true;
   try {
-    const result = await api(`/api/threads/${encodeURIComponent(state.selectedId)}/message`, { method: "POST", body: JSON.stringify({ text }) });
+    const attachments = await Promise.all(state.attachments.map(fileToPayload));
+    const result = await api(`/api/threads/${encodeURIComponent(state.selectedId)}/message`, {
+      method: "POST",
+      body: JSON.stringify({ text, attachments }),
+    });
     input.value = "";
+    clearAttachments();
     autoGrow({ target: input });
-    toast(result.mode === "desktop-app" ? "新要求已发送到电脑端任务" : result.mode === "steer" ? "新要求已加入当前执行" : "Codex 已开始处理");
+    const attachmentNote = result.attachments?.length ? `，已附 ${result.attachments.length} 个文件` : "";
+    toast((result.mode === "desktop-app" ? "新要求已发送到电脑端任务" : result.mode === "steer" ? "新要求已加入当前执行" : "Codex 已开始处理") + attachmentNote);
     setTimeout(loadDetail, 700);
   } catch (error) {
     toast(error.message);
   } finally {
     button.disabled = false;
+    $("#attach").disabled = false;
   }
+}
+
+function addAttachments(event) {
+  const incoming = [...event.target.files];
+  event.target.value = "";
+  const next = [...state.attachments];
+  for (const file of incoming) {
+    if (next.length >= 5) {
+      toast("一次最多发送 5 个附件");
+      break;
+    }
+    if (file.size > 15 * 1024 * 1024) {
+      toast(`${file.name} 超过 15 MB`);
+      continue;
+    }
+    if (next.some((item) => item.name === file.name && item.size === file.size && item.lastModified === file.lastModified)) continue;
+    next.push(file);
+  }
+  const total = next.reduce((sum, file) => sum + file.size, 0);
+  if (total > 25 * 1024 * 1024) {
+    toast("附件总大小不能超过 25 MB");
+    return;
+  }
+  state.attachments = next;
+  renderAttachments();
+}
+
+function renderAttachments() {
+  const list = $("#attachment-list");
+  list.hidden = state.attachments.length === 0;
+  list.replaceChildren(...state.attachments.map((file, index) => {
+    const item = document.createElement("div");
+    item.className = "attachment-chip";
+    const icon = document.createElement("span");
+    icon.className = "attachment-icon";
+    icon.textContent = file.type.startsWith("image/") ? "图" : "件";
+    const label = document.createElement("span");
+    label.className = "attachment-name";
+    label.textContent = `${file.name} · ${formatBytes(file.size)}`;
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "attachment-remove";
+    remove.setAttribute("aria-label", `移除 ${file.name}`);
+    remove.textContent = "×";
+    remove.addEventListener("click", () => {
+      state.attachments.splice(index, 1);
+      renderAttachments();
+    });
+    item.append(icon, label, remove);
+    return item;
+  }));
+}
+
+function clearAttachments() {
+  state.attachments = [];
+  $("#attachment-input").value = "";
+  renderAttachments();
+}
+
+function fileToPayload(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve({
+      name: file.name,
+      type: file.type || "application/octet-stream",
+      size: file.size,
+      data: String(reader.result).split(",", 2)[1] || "",
+    });
+    reader.onerror = () => reject(new Error(`无法读取 ${file.name}`));
+    reader.readAsDataURL(file);
+  });
+}
+
+function formatBytes(value) {
+  if (value < 1024) return `${value} B`;
+  if (value < 1024 * 1024) return `${Math.ceil(value / 1024)} KB`;
+  return `${(value / 1024 / 1024).toFixed(1)} MB`;
 }
 
 async function interruptTask() {

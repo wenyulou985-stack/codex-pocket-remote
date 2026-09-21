@@ -68,7 +68,7 @@ export class AppServerClient extends EventEmitter {
       clientInfo: {
         name: "codex_pocket",
         title: "Codex Pocket",
-        version: "0.1.0",
+        version: "0.2.0",
       },
       capabilities: {
         experimentalApi: true,
@@ -199,14 +199,15 @@ export class AppServerClient extends EventEmitter {
     return this.ownedThreadIds.has(threadId);
   }
 
-  async sendMessage(threadId, text) {
+  async sendMessage(threadId, text, attachments = []) {
     const thread = await this.readThread(threadId);
     const activeTurn = findActiveTurn(thread);
+    const input = buildUserInput(text, attachments);
     if (thread?.status?.type === "active" && activeTurn?.id) {
       await this.request("turn/steer", {
         threadId,
         expectedTurnId: activeTurn.id,
-        input: [{ type: "text", text }],
+        input,
       });
       return { mode: "steer", turnId: activeTurn.id };
     }
@@ -215,7 +216,7 @@ export class AppServerClient extends EventEmitter {
     this.ownedThreadIds.add(threadId);
     const result = await this.request("turn/start", {
       threadId,
-      input: [{ type: "text", text }],
+      input,
     }, 30_000);
     return { mode: "start", turnId: result?.turn?.id || null };
   }
@@ -269,6 +270,19 @@ export class AppServerClient extends EventEmitter {
     this.child = null;
     this.readyPromise = null;
   }
+}
+
+export function buildUserInput(text, attachments = []) {
+  const input = [];
+  if (text) input.push({ type: "text", text });
+  for (const attachment of attachments) {
+    if (attachment.isImage) {
+      input.push({ type: "localImage", path: attachment.path });
+    } else {
+      input.push({ type: "mention", name: attachment.name, path: attachment.path });
+    }
+  }
+  return input.length ? input : [{ type: "text", text: "请查看并处理我发送的附件。" }];
 }
 
 function findActiveTurn(thread) {

@@ -88,7 +88,7 @@ export class CodexAppToolsClient {
       await request("initialize", {
         protocolVersion: "2025-06-18",
         capabilities: {},
-        clientInfo: { name: "codex-pocket", version: "0.1.0" },
+        clientInfo: { name: "codex-pocket", version: "0.2.0" },
       });
       child.stdin.write(`${JSON.stringify({ jsonrpc: "2.0", method: "notifications/initialized" })}\n`);
       const callId = `codex-pocket-${randomUUID()}`;

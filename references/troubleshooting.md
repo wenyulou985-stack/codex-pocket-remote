@@ -27,6 +27,13 @@ This means a second App Server connection tried to write to a task already owned
 - Restart the bridge after Codex Desktop updates so local pipe discovery is refreshed.
 - Inspect `.data/server.err.log` and `.data/server.out.log`, redacting tokens, task IDs, usernames, paths, and hostnames before sharing excerpts.
 
+## The attachment button is missing or an upload fails
+
+- Close every installed-app and browser instance, reopen the private URL, and reload once so service-worker cache `v6` activates.
+- Keep each file below 15 MB, use no more than five files, and keep the combined size below 25 MB.
+- Confirm the computer has free disk space and the bridge can write to `.data/uploads`.
+- JPEG, PNG, GIF, and WebP are sent as native image inputs. All other formats, including source code and HEIC, are sent as file references; HEIC may require conversion before visual inspection.
+
 ## Page is stale after an update
 
 The PWA service worker may cache the old shell. Close all installed-app and browser instances, reopen the page, and reload once. If needed, clear site data for the private hostname and enter the token again.
