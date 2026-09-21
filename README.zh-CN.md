@@ -1,10 +1,10 @@
 # Codex Pocket Remote
 
-[English](README.md)
+[English](README.md) | [简体中文](README.zh-CN.md)
 
 Codex Pocket Remote 是一个开源 Codex Skill 和 Windows 本地网页应用，面向无法使用官方手机连接功能的用户。它让手机通过 Tailscale 私网查看 Codex Desktop 任务，并向电脑端已经打开、正在运行的任务继续发送要求。
 
-它解决的是一个很具体的问题：电脑上有长任务在运行，人离开电脑后仍能查看进度、发现任务是否在等待输入，并及时改变 Codex 的方向，同时不把远程终端或电脑端口暴露到公网。
+你是否还在担心：刚离开电脑，运行数小时的 Codex 任务就需要你确认，自己却无法查看进度或及时调整方向？Codex Pocket Remote 让你直接从手机查看进展、继续对话、上传照片和文件，同时不把远程终端或电脑端口暴露到公网。
 
 ## 功能
 

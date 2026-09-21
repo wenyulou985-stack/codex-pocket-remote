@@ -1,10 +1,10 @@
 # Codex Pocket Remote
 
-[简体中文](README.zh-CN.md)
+[English](README.md) | [简体中文](README.zh-CN.md)
 
 Codex Pocket Remote is an open Codex Skill and a Windows-first local web app for people who cannot use the official mobile connection flow. It lets a phone view Codex Desktop tasks and send new instructions to an already-running task through a private Tailscale connection.
 
-The project grew from a practical need: leave a long Codex task running on a computer, check its state from a phone, and redirect it without exposing a terminal or desktop to the public internet.
+Still worried that a long Codex task will need your input as soon as you leave the computer? Codex Pocket Remote lets you check progress, reply, upload photos or files, and redirect the task from your phone without exposing a terminal or desktop to the public internet.
 
 ## What it provides
 

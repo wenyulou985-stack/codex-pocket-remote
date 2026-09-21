@@ -38,3 +38,46 @@ Inspect Git history, not only the working tree. A later deletion does not remove
 This template is Windows-first and intended for one person's devices on one private tailnet. It is not a multi-user authorization system, a public SaaS backend, or a hardened remote shell. Add independent authentication, audit logging, rate limits, and an explicit threat model before adapting it for teams or public hosting.
 
 Uploaded files remain on the computer until the user removes `.data/uploads`. Treat this directory as private runtime data and do not copy it into a release or support bundle.
+
+---
+
+# 安全与隐私模型
+
+Codex Pocket 能访问任务文字、终端输出、文件路径和任务控制，因此应把它当作管理界面保护。
+
+## 默认防护
+
+- 服务只监听回环地址。
+- Tailscale 提供需要身份验证的私有网络访问和 HTTPS。
+- 随机生成的应用令牌保护 API 请求。
+- 运行状态保存在 `.data/`，并排除在 Git 之外。
+- 手机上传保存在 `.data/uploads/`，不会作为静态文件公开，并受数量和大小限制。
+- 不包含分析或遥测。
+
+## 必须保持私密的数据
+
+- 访问令牌和含令牌的 URL
+- tailnet 与设备主机名
+- 操作系统用户名和用户目录
+- Codex 任务 ID 与主机 ID
+- 提示词、回复、终端日志、Git diff、截图和项目文件
+- 手机上传的照片与文件
+- Tailscale 账号信息和认证材料
+
+## 共享或发布前
+
+运行：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\privacy-scan.ps1 -Path .
+git status --short
+git diff --cached
+```
+
+检查完整 Git 历史，而不只是工作区。后来删除文件并不会清除早期提交中的秘密。如果秘密曾被提交，应立即轮换，并在发布前重写历史或重建仓库。
+
+## 适用范围
+
+此模板优先支持 Windows，面向同一私有 tailnet 中的一位用户。它不是多用户授权系统、公开 SaaS 后端或经过强化的远程 Shell。改造成团队或公开服务前，需要增加独立身份验证、审计日志、速率限制和明确的威胁模型。
+
+上传文件会一直保留在电脑上，直到用户删除 `.data/uploads`。该目录属于私有运行数据，不要复制进发行包或支持材料。

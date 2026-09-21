@@ -1,5 +1,5 @@
 interface:
   display_name: "Codex Pocket Remote"
-  short_description: "Set up private mobile control for Codex Desktop"
+  short_description: "Private mobile control for Codex / Codex 私有手机控制"
   brand_color: "#18664B"
-  default_prompt: "Use $codex-pocket-remote to set up private mobile access to my Codex Desktop tasks."
+  default_prompt: "Use $codex-pocket-remote to set up private mobile access to my Codex Desktop tasks. 请用 $codex-pocket-remote 配置手机私密访问我的 Codex Desktop 任务。"
