@@ -1,5 +1,6 @@
 import http from "node:http";
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
+import { createReadStream } from "node:fs";
 import { mkdir, readFile, writeFile, stat } from "node:fs/promises";
 import { dirname, extname, join, normalize, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -7,7 +8,7 @@ import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { AppServerClient } from "./app-server-client.mjs";
 import { CodexAppToolsClient } from "./codex-app-tools-client.mjs";
-import { buildDesktopPrompt, decodeAttachments, MAX_MESSAGE_BODY_BYTES, saveAttachments } from "./attachments.mjs";
+import { buildDesktopPrompt, decodeAttachments, extractReturnedFiles, MAX_MESSAGE_BODY_BYTES, saveAttachments } from "./attachments.mjs";
 
 const execFileAsync = promisify(execFile);
 const rootDir = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -88,6 +89,16 @@ async function handleApi(request, response, url) {
     if (!info?.isDirectory()) return json(response, 400, { error: "项目目录不存在，或不是文件夹。" });
     const result = await bridge.startThread(resolve(cwd), text);
     return json(response, 201, { created: true, ...result });
+  }
+
+  const downloadMatch = url.pathname.match(/^\/api\/threads\/([^/]+)\/downloads\/([^/]+)$/);
+  if (downloadMatch && method === "GET") {
+    const threadId = decodeURIComponent(downloadMatch[1]);
+    const downloadId = decodeURIComponent(downloadMatch[2]);
+    const thread = await bridge.readThread(threadId);
+    const allowed = collectReturnedFiles(thread).find((file) => returnedFileId(file.path) === downloadId);
+    if (!allowed) return json(response, 404, { error: "该文件没有出现在 Codex 返回消息中，无法下载。" });
+    return await sendReturnedFile(response, allowed);
   }
 
   const threadMatch = url.pathname.match(/^\/api\/threads\/([^/]+)(?:\/(message|interrupt|git|approvals|archive))?$/);
@@ -203,7 +214,16 @@ function normalizeItem(item, turn, index) {
     status: item.status || turn.status || null,
   };
   if (item.type === "userMessage") return { ...base, role: "user", text: contentText(item.content) };
-  if (item.type === "agentMessage") return { ...base, role: "assistant", text: item.text || "", phase: item.phase || null };
+  if (item.type === "agentMessage") {
+    const messageText = item.text || "";
+    return {
+      ...base,
+      role: "assistant",
+      text: messageText,
+      phase: item.phase || null,
+      files: extractReturnedFiles(messageText).map((file) => ({ id: returnedFileId(file.path), name: file.name })),
+    };
+  }
   if (item.type === "commandExecution") {
     return { ...base, command: item.command || "", cwd: item.cwd || null, output: truncate(item.aggregatedOutput || item.output || "", 12_000), exitCode: item.exitCode ?? null };
   }
@@ -226,6 +246,48 @@ function cleanUserMessage(text) {
   const delegated = text.match(/<codex_delegation>[\s\S]*?<input>([\s\S]*?)<\/input>[\s\S]*?<\/codex_delegation>/i);
   if (delegated) return delegated[1].trim();
   return text.replace(/<in-app-browser-context\b[\s\S]*?<\/in-app-browser-context>/gi, "").trim();
+}
+
+function collectReturnedFiles(thread) {
+  const files = [];
+  const seen = new Set();
+  for (const turn of thread?.turns || []) {
+    for (const item of turn.items || []) {
+      if (item.type !== "agentMessage") continue;
+      for (const file of extractReturnedFiles(item.text)) {
+        const id = returnedFileId(file.path);
+        if (seen.has(id)) continue;
+        seen.add(id);
+        files.push(file);
+      }
+    }
+  }
+  return files;
+}
+
+function returnedFileId(path) {
+  return createHash("sha256").update(token).update("\0").update(resolve(path)).digest("base64url").slice(0, 32);
+}
+
+async function sendReturnedFile(response, file) {
+  const info = await stat(file.path).catch(() => null);
+  if (!info?.isFile()) return json(response, 404, { error: "文件已被移动、删除或暂时不可用。" });
+  const asciiName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_") || "Codex-file";
+  const encodedName = encodeURIComponent(file.name).replace(/[!'()*]/g, (character) => `%${character.charCodeAt(0).toString(16).toUpperCase()}`);
+  response.writeHead(200, {
+    "Content-Type": mimeType(extname(file.path)),
+    "Content-Length": info.size,
+    "Content-Disposition": `attachment; filename="${asciiName}"; filename*=UTF-8''${encodedName}`,
+    "Cache-Control": "private, no-store",
+    "X-Content-Type-Options": "nosniff",
+    "Referrer-Policy": "no-referrer",
+  });
+  await new Promise((resolveStream, rejectStream) => {
+    const stream = createReadStream(file.path);
+    stream.on("error", rejectStream);
+    response.on("finish", resolveStream);
+    stream.pipe(response);
+  });
 }
 
 function normalizeStatus(status) {
@@ -347,7 +409,7 @@ function text(response, status, value) {
 }
 
 function mimeType(extension) {
-  return ({ ".html": "text/html; charset=utf-8", ".css": "text/css; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".json": "application/json; charset=utf-8", ".webmanifest": "application/manifest+json", ".svg": "image/svg+xml", ".png": "image/png" })[extension] || "application/octet-stream";
+  return ({ ".html": "text/html; charset=utf-8", ".css": "text/css; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".json": "application/json; charset=utf-8", ".webmanifest": "application/manifest+json", ".svg": "image/svg+xml", ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".gif": "image/gif", ".webp": "image/webp", ".pdf": "application/pdf", ".txt": "text/plain; charset=utf-8", ".md": "text/markdown; charset=utf-8", ".csv": "text/csv; charset=utf-8", ".zip": "application/zip" })[extension.toLowerCase()] || "application/octet-stream";
 }
 
 function truncate(value, max) {

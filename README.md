@@ -11,6 +11,7 @@ Still worried that a long Codex task will need your input as soon as you leave t
 - A mobile-friendly task timeline with terminal and internal work grouped and collapsed by default
 - Follow-up messages to tasks already open in Codex Desktop
 - Photos and files sent from the phone to the selected Codex task
+- Authenticated downloads for local files explicitly returned by Codex
 - Task interruption, refresh, recent activity, and file-change visibility
 - A PWA that can be installed from the phone browser
 - Loopback-only local service plus private HTTPS through Tailscale Serve
@@ -18,7 +19,7 @@ Still worried that a long Codex task will need your input as soon as you leave t
 
 ## Security model
 
-The Node service listens on `127.0.0.1`. Tailscale Serve exposes it only inside your tailnet. The app adds its own random access token and keeps runtime state under the Git-ignored `.data/` directory. It contains no analytics or telemetry.
+The Node service listens on `127.0.0.1`. Tailscale Serve exposes it only inside your tailnet. The app adds its own random access token and keeps runtime state under the Git-ignored `.data/` directory. The token is never appended to the phone URL. Returned files are downloadable only when an assistant message explicitly links them. It contains no analytics or telemetry.
 
 Do not publish your token, private URL, device name, task IDs, prompts, terminal output, or screenshots. Read [references/security.md](references/security.md) before sharing a customized copy.
 
@@ -50,7 +51,7 @@ npm test
 npm run start:bg
 ```
 
-Open `http://127.0.0.1:4310` on the computer. Read the first-use token locally with `Get-Content .data\access-token`; enter it once on the phone and do not send it through chat. To enable private phone access after installing and signing into Tailscale on both devices:
+Open `http://127.0.0.1:4310` on the computer. Read the first-use token locally with `Get-Content .data\access-token`; enter it once on the phone and do not send it through chat or append it to a URL. To enable private phone access after installing and signing into Tailscale on both devices:
 
 ```powershell
 npm run remote:setup

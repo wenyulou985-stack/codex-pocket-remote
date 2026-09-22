@@ -29,7 +29,7 @@ npm test
 npm run start:bg
 ```
 
-Open `http://127.0.0.1:4310` on the computer. Read the token locally with `Get-Content .data\access-token`, then enter it once on the phone; the browser stores it locally. Do not paste the token into messages or documentation.
+Open `http://127.0.0.1:4310` on the computer. Read the token locally with `Get-Content .data\access-token`, then enter it once on the phone; the browser stores it locally. Do not paste the token into messages, documentation, or a URL.
 
 ## Enable private phone access
 
@@ -47,6 +47,8 @@ Open the reported `https://<device>.<tailnet>.ts.net/` address on the phone. Use
 Select the open task in the phone UI and send a harmless test such as `请回复：手机连接测试成功`. The bridge first uses the desktop app's local tools pipe so it does not compete for the App Server writer. It falls back only where the local environment supports it.
 
 To send photos or files, tap the `+` beside the message field. The phone may select up to five files per message. Images use the App Server's native local-image input when the bridge owns the task; other files are passed as local file mentions. Existing desktop-owned tasks receive the same local paths through the desktop control channel.
+
+When Codex returns a local file using a Markdown link, the phone shows a download card below the reply. The request uses the stored application token and succeeds only while that exact link remains in the selected task.
 
 ## Stop or remove
 
@@ -98,7 +100,7 @@ npm test
 npm run start:bg
 ```
 
-在电脑打开 `http://127.0.0.1:4310`。使用 `Get-Content .data\access-token` 在电脑本地读取令牌，然后在手机输入一次；浏览器会保存在本机。不要把令牌粘贴到消息或文档中。
+在电脑打开 `http://127.0.0.1:4310`。使用 `Get-Content .data\access-token` 在电脑本地读取令牌，然后在手机输入一次；浏览器会保存在本机。不要把令牌粘贴到消息、文档或 URL 中。
 
 ## 开启手机私有访问
 
@@ -116,6 +118,8 @@ npm run remote:status
 在手机界面选择已经打开的任务，发送无害测试消息，例如 `请回复：手机连接测试成功`。桥接服务优先使用 Codex Desktop 的本地工具管道，避免与 App Server writer 冲突。
 
 点击输入框旁的 `+` 可发送照片或文件，每条消息最多五个文件。桥接服务拥有任务时，图片使用 App Server 的原生本地图像输入；其他文件作为本地文件引用发送。电脑端已占用的任务通过桌面控制通道接收相同的本地路径。
+
+当 Codex 用 Markdown 链接返回电脑本地文件时，手机会在回复下方显示下载卡片。下载请求使用浏览器中保存的应用令牌，并且只有该文件链接仍存在于所选任务时才会成功。
 
 ## 停止或移除
 

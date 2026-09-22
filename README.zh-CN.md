@@ -12,6 +12,7 @@ Codex Pocket Remote 是一个开源 Codex Skill 和 Windows 本地网页应用�
 - “工作过程”默认整体折叠，其中包含终端输出、分析、工具调用和文件改动，需要时再展开
 - 向 Codex Desktop 已打开的任务发送后续要求
 - 从手机向所选 Codex 任务发送照片和文件
+- 下载 Codex 在回复中明确返回的电脑本地文件
 - 中断任务、刷新状态、查看最近活动和文件变化
 - 可从手机浏览器安装为 PWA，体验接近独立 App
 - 本地服务只监听回环地址，通过 Tailscale Serve 提供私有 HTTPS
@@ -19,7 +20,7 @@ Codex Pocket Remote 是一个开源 Codex Skill 和 Windows 本地网页应用�
 
 ## 安全设计
 
-Node 服务只监听 `127.0.0.1`，Tailscale Serve 只在你的 tailnet 内提供访问。应用另外生成随机访问令牌，运行数据保存在 Git 已忽略的 `.data/` 目录。项目不包含统计或遥测。
+Node 服务只监听 `127.0.0.1`，Tailscale Serve 只在你的 tailnet 内提供访问。应用另外生成随机访问令牌，运行数据保存在 Git 已忽略的 `.data/` 目录。令牌不会附在手机 URL 中；只有 Codex 回复中明确链接的本地文件可以下载。项目不包含统计或遥测。
 
 请勿公开访问令牌、私人网址、设备名、任务 ID、提示词、终端输出或截图。准备分享修改版之前，请阅读 [references/security.md](references/security.md)。
 
@@ -51,7 +52,7 @@ npm test
 npm run start:bg
 ```
 
-在电脑打开 `http://127.0.0.1:4310`。首次使用时，在电脑本地运行 `Get-Content .data\access-token` 读取令牌，在手机输入一次，不要通过聊天软件转发。电脑和手机安装 Tailscale 并登录同一个账号后，开启私网访问：
+在电脑打开 `http://127.0.0.1:4310`。首次使用时，在电脑本地运行 `Get-Content .data\access-token` 读取令牌，在手机输入一次，不要通过聊天软件转发，也不要附在 URL 中。电脑和手机安装 Tailscale 并登录同一个账号后，开启私网访问：
 
 ```powershell
 npm run remote:setup

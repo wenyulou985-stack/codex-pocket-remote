@@ -31,5 +31,5 @@ Set-Content -LiteralPath (Join-Path $projectDir ".data\remote-url.txt") -Value $
 
 Write-Host "Remote access is ready." -ForegroundColor Green
 Write-Host "Phone URL: $remoteUrl"
-Write-Host "Read the access token locally with: Get-Content '.data\access-token'"
+Write-Host "Read .data/access-token locally and enter it once on the phone. Never share the token or append it to the URL."
 Write-Host "This address works only for devices signed in to your Tailscale network."

@@ -284,6 +284,12 @@ function renderConversationEvent(item) {
     body.className = "event-body";
     body.textContent = item.text || item.command || fileChangeText(item.changes) || "活动更新";
     node.append(label, body);
+    if (item.role === "assistant" && item.files?.length) {
+      const files = document.createElement("div");
+      files.className = "returned-files";
+      files.replaceChildren(...item.files.map((file) => returnedFileButton(file)));
+      node.append(files);
+    }
     if (item.output) {
       const output = document.createElement("pre");
       output.className = "event-output";
@@ -291,6 +297,44 @@ function renderConversationEvent(item) {
       node.append(output);
     }
     return node;
+}
+
+function returnedFileButton(file) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "returned-file";
+  button.innerHTML = '<span class="returned-file-icon">↓</span><span class="returned-file-name"></span><span class="returned-file-action">下载</span>';
+  button.querySelector(".returned-file-name").textContent = file.name;
+  button.setAttribute("aria-label", `下载 ${file.name}`);
+  button.addEventListener("click", () => downloadReturnedFile(file, button));
+  return button;
+}
+
+async function downloadReturnedFile(file, button) {
+  button.disabled = true;
+  try {
+    const response = await fetch(`/api/threads/${encodeURIComponent(state.selectedId)}/downloads/${encodeURIComponent(file.id)}`, {
+      headers: { "Authorization": `Bearer ${state.token}` },
+    });
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      throw new Error(data.error || `下载失败 (${response.status})`);
+    }
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = file.name;
+    document.body.append(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    toast(`${file.name} 已发送到手机`);
+  } catch (error) {
+    toast(error.message, 5000);
+  } finally {
+    button.disabled = false;
+  }
 }
 
 function renderWorkGroup(group) {

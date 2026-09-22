@@ -43,5 +43,5 @@ if ($PrivateOnly) {
     Write-Host "Phone URL: http://${address}:4310/"
   }
   Write-Host "Use these URLs only on trusted Wi-Fi or a private VPN."
-  Write-Host "Read the access token locally with: Get-Content '.data\access-token'"
 }
+Write-Host "Read .data/access-token locally and enter it once on the phone. Never share the token or append it to a URL."

@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { buildDesktopPrompt, decodeAttachments } from "../src/attachments.mjs";
+import { buildDesktopPrompt, decodeAttachments, extractReturnedFiles } from "../src/attachments.mjs";
 import { buildUserInput } from "../src/app-server-client.mjs";
 
 test("decodes a mobile upload and sanitizes its name", () => {
@@ -27,4 +27,17 @@ test("desktop prompt preserves the attachment paths and user request marker", ()
   assert.match(prompt, /# Files mentioned by the user:/);
   assert.match(prompt, /## 参考图\.png: C:\\uploads\\参考图\.png/);
   assert.match(prompt, /## My request:\n\n按图片修改页面/);
+});
+
+test("extracts only local files explicitly linked by a Codex response", () => {
+  const files = extractReturnedFiles([
+    "已生成 [报告](<C:\\Users\\demo\\My Report.pdf>)。",
+    "预览：![图片](D:/output/结果图.png)",
+    "资料：[网页](https://example.com/file.pdf)",
+    "站内页：[设置](/settings/profile)",
+  ].join("\n"));
+  assert.deepEqual(files, [
+    { name: "报告", path: "C:\\Users\\demo\\My Report.pdf" },
+    { name: "图片", path: "D:\\output\\结果图.png" },
+  ]);
 });

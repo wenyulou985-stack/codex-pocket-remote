@@ -38,6 +38,13 @@ This means a second App Server connection tried to write to a task already owned
 
 The PWA service worker may cache the old shell. Close all installed-app and browser instances, reopen the page, and reload once. If needed, clear site data for the private hostname and enter the token again.
 
+## A returned file has no download card or will not download
+
+- Confirm the Codex reply contains a Markdown link to an absolute local file, such as `[report.pdf](<C:\\project\\report.pdf>)`.
+- Reload the phone page so Service Worker cache `v7` activates.
+- Keep the computer online and confirm the file has not been moved or deleted.
+- A web URL, plain unlinked path, directory, or file mentioned only by the user is intentionally not downloadable.
+
 ## Tailscale Serve authorization page repeats
 
 Finish the Serve approval in the same tailnet account used by the computer. Then rerun `npm run remote:setup`. Avoid repeated rapid registration attempts because authentication endpoints may be rate-limited.
@@ -83,6 +90,13 @@ Finish the Serve approval in the same tailnet account used by the computer. Then
 ## 更新后页面仍是旧版
 
 PWA Service Worker 可能缓存了旧界面。关闭所有已安装 App 与浏览器实例，重新打开并刷新一次；必要时清除私有域名的站点数据并重新输入令牌。
+
+## 返回文件没有下载卡片或无法下载
+
+- 确认 Codex 回复中使用 Markdown 链接指向绝对本地文件，例如 `[report.pdf](<C:\\project\\report.pdf>)`。
+- 刷新手机页面，使 Service Worker 缓存 `v7` 生效。
+- 保持电脑在线，并确认文件没有被移动或删除。
+- 网页链接、未做成链接的纯路径、文件夹，或只由用户消息提到的文件会被有意拒绝下载。
 
 ## Tailscale Serve 授权页面反复出现
 

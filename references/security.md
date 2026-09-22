@@ -9,6 +9,7 @@ Codex Pocket is a personal control surface with access to task text, terminal ou
 - A randomly generated application token protects API requests.
 - Runtime state is stored under `.data/` and excluded from Git.
 - Phone uploads are stored under `.data/uploads/`, never served as public static files, and are limited by count and size.
+- Returned-file downloads require the application token and a file link explicitly present in an assistant message for that task; arbitrary filesystem paths are rejected.
 - No analytics or telemetry is included.
 
 ## Data that must remain private
@@ -39,6 +40,8 @@ This template is Windows-first and intended for one person's devices on one priv
 
 Uploaded files remain on the computer until the user removes `.data/uploads`. Treat this directory as private runtime data and do not copy it into a release or support bundle.
 
+Never append the access token to a phone URL or print a token-bearing URL. Read the token locally and enter it once in the phone UI.
+
 ---
 
 # 安全与隐私模型
@@ -52,6 +55,7 @@ Codex Pocket 能访问任务文字、终端输出、文件路径和任务控制�
 - 随机生成的应用令牌保护 API 请求。
 - 运行状态保存在 `.data/`，并排除在 Git 之外。
 - 手机上传保存在 `.data/uploads/`，不会作为静态文件公开，并受数量和大小限制。
+- 返回文件下载需要应用令牌，并且文件必须由该任务的 Codex 回复明确链接；任意文件系统路径会被拒绝。
 - 不包含分析或遥测。
 
 ## 必须保持私密的数据
@@ -81,3 +85,5 @@ git diff --cached
 此模板优先支持 Windows，面向同一私有 tailnet 中的一位用户。它不是多用户授权系统、公开 SaaS 后端或经过强化的远程 Shell。改造成团队或公开服务前，需要增加独立身份验证、审计日志、速率限制和明确的威胁模型。
 
 上传文件会一直保留在电脑上，直到用户删除 `.data/uploads`。该目录属于私有运行数据，不要复制进发行包或支持材料。
+
+不要把访问令牌附在手机 URL 中，也不要输出含令牌的 URL。只在电脑本地读取令牌，并在手机界面输入一次。

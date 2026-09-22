@@ -1,6 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
-import { basename, join } from "node:path";
+import { basename, isAbsolute, join, normalize } from "node:path";
+import { fileURLToPath } from "node:url";
 
 export const MAX_ATTACHMENT_COUNT = 5;
 export const MAX_ATTACHMENT_BYTES = 15 * 1024 * 1024;
@@ -61,6 +62,42 @@ export function buildDesktopPrompt(text, attachments) {
   const files = attachments.map((file) => `## ${file.name}: ${file.path}`).join("\n\n");
   const request = text || "请查看并处理我发送的附件。";
   return `# Files mentioned by the user:\n\n${files}\n\n## My request:\n\n${request}`;
+}
+
+export function extractReturnedFiles(value) {
+  const text = String(value || "");
+  const files = [];
+  const seen = new Set();
+  const linkPattern = /!?\[([^\]]*)\]\((?:<([^>]+)>|([^\r\n)]+))\)/g;
+  for (const match of text.matchAll(linkPattern)) {
+    const rawTarget = String(match[2] || match[3] || "").trim();
+    const path = normalizeLocalTarget(rawTarget);
+    if (!path || seen.has(path.toLowerCase())) continue;
+    seen.add(path.toLowerCase());
+    const label = String(match[1] || "").trim();
+    files.push({ name: safeDownloadName(label, path), path });
+  }
+  return files;
+}
+
+function normalizeLocalTarget(value) {
+  let target = value.replace(/\s+["'][^"']*["']\s*$/, "").trim();
+  if (/^file:\/\//i.test(target)) {
+    try { target = fileURLToPath(target); } catch { return null; }
+  } else {
+    try { target = decodeURIComponent(target); } catch {}
+  }
+  const absolute = process.platform === "win32"
+    ? /^[a-zA-Z]:[\\/]/.test(target) || /^\\\\[^\\]+\\[^\\]+/.test(target)
+    : isAbsolute(target);
+  if (!absolute) return null;
+  return normalize(target);
+}
+
+function safeDownloadName(label, path) {
+  const fallback = basename(path) || "Codex-file";
+  const value = label && !/^(download|open|file|下载|打开|文件)$/i.test(label) ? label : fallback;
+  return sanitizeFileName(value, 0);
 }
 
 function sanitizeFileName(value, index) {
