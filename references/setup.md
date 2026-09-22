@@ -42,6 +42,12 @@ npm run remote:status
 
 Open the reported `https://<device>.<tailnet>.ts.net/` address on the phone. Use the browser's Add to Home Screen or Install app action for the PWA experience.
 
+## Start a new task with files
+
+Tap `+` in the task list. To use an existing project, enter its full folder path. To create a project, enable **Create a new project folder**, enter an existing parent directory, and keep or replace the default `New project` name. If that default already exists, Pocket selects the next numbered name.
+
+Enter a request, attach up to five photos or documents, or do both. The selected files are included in the first Codex turn, so no preliminary message is required.
+
 ## Send to an existing desktop task
 
 Select the open task in the phone UI and send a harmless test such as `请回复：手机连接测试成功`. The bridge first uses the desktop app's local tools pipe so it does not compete for the App Server writer. It falls back only where the local environment supports it.
@@ -112,6 +118,12 @@ npm run remote:status
 ```
 
 在手机打开脚本报告的 `https://<device>.<tailnet>.ts.net/` 地址。需要类似 App 的体验时，使用浏览器的“添加到主屏幕”或“安装应用”。
+
+## 新建任务并直接附加文件
+
+在任务列表点击 `+`。使用已有项目时，输入项目文件夹完整路径；创建新项目时，勾选“创建新的项目文件夹”，输入一个已经存在的父目录，并保留或修改默认的 `New project` 名称。如果默认名称重名，Pocket 会自动选择下一个编号。
+
+可以填写任务要求、选择最多五张照片或文档，或者同时填写。附件会直接进入 Codex 第一轮输入，不需要先发送一条纯文字消息。
 
 ## 向电脑端现有任务发送消息
 

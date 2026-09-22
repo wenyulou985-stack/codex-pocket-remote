@@ -14,7 +14,7 @@ test("connects to the local Codex App Server and lists stored threads", { timeou
   }
 });
 
-test("starts a Pocket-owned thread before its first turn", async () => {
+test("starts a Pocket-owned thread with initial attachments", async () => {
   const client = new AppServerClient();
   const calls = [];
   client.request = async (method, params) => {
@@ -24,12 +24,17 @@ test("starts a Pocket-owned thread before its first turn", async () => {
     throw new Error(`Unexpected method: ${method}`);
   };
 
-  const result = await client.startThread("D:\\project", "run the tests");
+  const result = await client.startThread("D:\\project", "review this", [
+    { name: "brief.pdf", path: "D:\\uploads\\brief.pdf", isImage: false },
+  ]);
 
   assert.deepEqual(result, { threadId: "thread-1", turnId: "turn-1" });
   assert.equal(client.ownsThread("thread-1"), true);
   assert.deepEqual(calls.map((call) => call.method), ["thread/start", "turn/start"]);
   assert.equal(calls[0].params.approvalPolicy, "on-request");
   assert.equal(calls[0].params.sandbox, "workspace-write");
-  assert.deepEqual(calls[1].params.input, [{ type: "text", text: "run the tests" }]);
+  assert.deepEqual(calls[1].params.input, [
+    { type: "text", text: "review this" },
+    { type: "mention", name: "brief.pdf", path: "D:\\uploads\\brief.pdf" },
+  ]);
 });

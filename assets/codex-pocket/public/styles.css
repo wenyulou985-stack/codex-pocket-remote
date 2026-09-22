@@ -181,6 +181,16 @@ h2 { font-size: 23px; letter-spacing: -0.025em; }
 .task-dialog-card input { min-height: 48px; }
 .task-dialog-card textarea { resize: vertical; min-height: 116px; }
 .task-dialog-card input:focus, .task-dialog-card textarea:focus { outline: 3px solid rgba(24,102,75,0.16); border-color: var(--green); }
+.task-create-option { display: flex; align-items: center; gap: 10px; margin-top: 6px !important; padding: 11px 12px; border: 1px solid var(--line); background: var(--paper); cursor: pointer; }
+.task-create-option input { width: 19px; min-height: 19px; margin: 0; accent-color: var(--green); }
+.task-create-option span { display: grid; gap: 2px; }
+.task-create-option small { color: var(--muted); font-size: 11px; font-weight: 500; }
+.project-name-field { display: grid; gap: 8px; }
+.project-name-field label { margin-top: 4px; }
+.new-task-attachment-list { padding-block: 2px; }
+.new-task-attachment-picker { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; }
+.new-task-attachment-picker .secondary { min-height: 42px; padding: 0 13px; border: 1px solid var(--line); background: var(--paper); color: var(--green); font-weight: 750; }
+.new-task-attachment-picker .muted { font-size: 11px; }
 .primary { width: 100%; min-height: 48px; margin-top: 12px; border: 0; background: var(--green); color: white; font-weight: 750; }
 .error-text { min-height: 20px; color: var(--red); font-size: 12px; margin-top: 10px; }
 

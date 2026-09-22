@@ -10,6 +10,8 @@ Still worried that a long Codex task will need your input as soon as you leave t
 
 - A mobile-friendly task timeline with terminal and internal work grouped and collapsed by default
 - Follow-up messages to tasks already open in Codex Desktop
+- New Codex tasks in an existing folder or a newly created `New project` folder
+- Photos and documents attached directly to the first task request
 - Photos and files sent from the phone to the selected Codex task
 - Authenticated downloads for local files explicitly returned by Codex
 - Task interruption, refresh, recent activity, and file-change visibility

@@ -8,6 +8,7 @@ const state = {
   terminalDisclosure: new Map(),
   workDisclosure: new Map(),
   attachments: [],
+  newTaskAttachments: [],
 };
 
 const $ = (selector) => document.querySelector(selector);
@@ -59,6 +60,9 @@ function bindEvents() {
   $("#new-task").addEventListener("click", openNewTask);
   $("#close-new-task").addEventListener("click", closeNewTask);
   $("#new-task-form").addEventListener("submit", createTask);
+  $("#create-project-folder").addEventListener("change", updateProjectMode);
+  $("#new-task-attach").addEventListener("click", () => $("#new-task-attachment-input").click());
+  $("#new-task-attachment-input").addEventListener("change", addNewTaskAttachments);
   $("#detail-refresh").addEventListener("click", loadDetail);
   $("#back").addEventListener("click", closeDetail);
   $("#interrupt").addEventListener("click", interruptTask);
@@ -124,6 +128,8 @@ function openNewTask() {
   const firstCwd = state.threads.find((thread) => thread.cwd)?.cwd || "";
   $("#task-cwd").value ||= firstCwd;
   $("#new-task-error").textContent = "";
+  updateProjectMode();
+  renderNewTaskAttachments();
   $("#new-task-dialog").hidden = false;
   document.body.style.overflow = "hidden";
   $("#task-prompt").focus();
@@ -139,20 +145,52 @@ async function createTask(event) {
   const button = $("#create-task");
   const cwd = $("#task-cwd").value.trim();
   const text = $("#task-prompt").value.trim();
+  const createProject = $("#create-project-folder").checked;
+  const projectName = $("#project-name").value.trim();
+  if (!text && !state.newTaskAttachments.length) {
+    $("#new-task-error").textContent = "请输入任务要求或添加照片、文档。";
+    return;
+  }
   button.disabled = true;
+  $("#new-task-attach").disabled = true;
   $("#new-task-error").textContent = "";
   try {
-    const result = await api("/api/threads", { method: "POST", body: JSON.stringify({ cwd, text }) });
+    const attachments = await Promise.all(state.newTaskAttachments.map(fileToPayload));
+    const result = await api("/api/threads", { method: "POST", body: JSON.stringify({ cwd, text, createProject, projectName, attachments }) });
     closeNewTask();
     $("#task-prompt").value = "";
-    toast("Codex 已开始执行新任务");
+    clearNewTaskAttachments();
+    const attachmentNote = result.attachments?.length ? `，已附 ${result.attachments.length} 个文件` : "";
+    const projectNote = createProject ? `已创建 ${leafName(result.cwd)}，Codex 已开始执行` : "Codex 已开始执行新任务";
+    toast(projectNote + attachmentNote);
     await loadThreads();
     await openDetail(result.threadId);
   } catch (error) {
     $("#new-task-error").textContent = error.message;
   } finally {
     button.disabled = false;
+    $("#new-task-attach").disabled = false;
   }
+}
+
+function updateProjectMode() {
+  const createProject = $("#create-project-folder").checked;
+  $("#project-name-field").hidden = !createProject;
+  $("#task-cwd-label").textContent = createProject ? "新项目的父目录" : "已有项目文件夹";
+  $("#task-cwd").placeholder = createProject ? "C:\\Projects" : "C:\\Projects\\my-project";
+  if (createProject) {
+    const current = $("#task-cwd").value.trim();
+    const recent = state.threads.some((thread) => thread.cwd === current);
+    if (recent) $("#task-cwd").value = parentPath(current);
+  }
+}
+
+function parentPath(value) {
+  return String(value || "").replace(/[\\/]+$/, "").replace(/[\\/][^\\/]+$/, "");
+}
+
+function leafName(value) {
+  return String(value || "新项目").replace(/[\\/]+$/, "").split(/[\\/]/).pop() || "新项目";
 }
 
 function renderHealth(health) {
@@ -563,7 +601,19 @@ async function sendMessage(event) {
 function addAttachments(event) {
   const incoming = [...event.target.files];
   event.target.value = "";
-  const next = [...state.attachments];
+  state.attachments = mergeAttachmentFiles(state.attachments, incoming);
+  renderAttachments();
+}
+
+function addNewTaskAttachments(event) {
+  const incoming = [...event.target.files];
+  event.target.value = "";
+  state.newTaskAttachments = mergeAttachmentFiles(state.newTaskAttachments, incoming);
+  renderNewTaskAttachments();
+}
+
+function mergeAttachmentFiles(current, incoming) {
+  const next = [...current];
   for (const file of incoming) {
     if (next.length >= 5) {
       toast("一次最多发送 5 个附件");
@@ -579,10 +629,9 @@ function addAttachments(event) {
   const total = next.reduce((sum, file) => sum + file.size, 0);
   if (total > 25 * 1024 * 1024) {
     toast("附件总大小不能超过 25 MB");
-    return;
+    return current;
   }
-  state.attachments = next;
-  renderAttachments();
+  return next;
 }
 
 function renderAttachments() {
@@ -609,6 +658,43 @@ function renderAttachments() {
     item.append(icon, label, remove);
     return item;
   }));
+}
+
+function renderNewTaskAttachments() {
+  const list = $("#new-task-attachment-list");
+  list.hidden = state.newTaskAttachments.length === 0;
+  list.replaceChildren(...state.newTaskAttachments.map((file, index) => {
+    const item = attachmentChip(file, index, () => {
+      state.newTaskAttachments.splice(index, 1);
+      renderNewTaskAttachments();
+    });
+    return item;
+  }));
+}
+
+function clearNewTaskAttachments() {
+  state.newTaskAttachments = [];
+  $("#new-task-attachment-input").value = "";
+  renderNewTaskAttachments();
+}
+
+function attachmentChip(file, index, onRemove) {
+  const item = document.createElement("div");
+  item.className = "attachment-chip";
+  const icon = document.createElement("span");
+  icon.className = "attachment-icon";
+  icon.textContent = file.type.startsWith("image/") ? "图" : "件";
+  const label = document.createElement("span");
+  label.className = "attachment-name";
+  label.textContent = `${file.name} · ${formatBytes(file.size)}`;
+  const remove = document.createElement("button");
+  remove.type = "button";
+  remove.className = "attachment-remove";
+  remove.setAttribute("aria-label", `移除 ${file.name}`);
+  remove.textContent = "×";
+  remove.addEventListener("click", onRemove);
+  item.append(icon, label, remove);
+  return item;
 }
 
 function clearAttachments() {

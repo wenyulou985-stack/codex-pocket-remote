@@ -45,6 +45,13 @@ The PWA service worker may cache the old shell. Close all installed-app and brow
 - Keep the computer online and confirm the file has not been moved or deleted.
 - A web URL, plain unlinked path, directory, or file mentioned only by the user is intentionally not downloadable.
 
+## A new project or its first attachments fail
+
+- For a new project, the path field must contain an existing parent directory, not the new folder's full path.
+- The project name must be a single Windows-safe folder name. The default `New project` name is numbered automatically when needed.
+- The first request may contain text, attachments, or both. Attachment limits remain five files, 15 MB each, and 25 MB combined.
+- Reload the phone page so Service Worker cache `v8` activates if the new controls are missing.
+
 ## Tailscale Serve authorization page repeats
 
 Finish the Serve approval in the same tailnet account used by the computer. Then rerun `npm run remote:setup`. Avoid repeated rapid registration attempts because authentication endpoints may be rate-limited.
@@ -97,6 +104,13 @@ PWA Service Worker 可能缓存了旧界面。关闭所有已安装 App 与浏�
 - 刷新手机页面，使 Service Worker 缓存 `v7` 生效。
 - 保持电脑在线，并确认文件没有被移动或删除。
 - 网页链接、未做成链接的纯路径、文件夹，或只由用户消息提到的文件会被有意拒绝下载。
+
+## 新项目或首条附件发送失败
+
+- 新建项目时，路径栏应填写已经存在的父目录，而不是新文件夹的完整路径。
+- 项目名称必须是一个符合 Windows 规则的文件夹名称。默认 `New project` 重名时会自动编号。
+- 第一条要求可以只有文字、只有附件，或两者都有。附件仍限制为最多五个、单个 15 MB、合计 25 MB。
+- 如果看不到新控件，请刷新手机页面，使 Service Worker 缓存 `v8` 生效。
 
 ## Tailscale Serve 授权页面反复出现
 

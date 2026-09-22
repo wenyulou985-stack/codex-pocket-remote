@@ -178,7 +178,7 @@ export class AppServerClient extends EventEmitter {
     throw lastError;
   }
 
-  async startThread(cwd, text) {
+  async startThread(cwd, text, attachments = []) {
     const started = await this.request("thread/start", {
       cwd,
       approvalPolicy: "on-request",
@@ -190,7 +190,7 @@ export class AppServerClient extends EventEmitter {
     this.ownedThreadIds.add(threadId);
     const turn = await this.request("turn/start", {
       threadId,
-      input: [{ type: "text", text }],
+      input: buildUserInput(text, attachments),
     }, 30_000);
     return { threadId, turnId: turn?.turn?.id || null };
   }

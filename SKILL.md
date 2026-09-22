@@ -31,8 +31,9 @@ Create a private phone control panel for Codex Desktop. The included template re
 6. Request user action only when interactive sign-in is required or an external publication/installation lacks prior authorization. Explain the exact step and continue all independent setup first.
 7. Keep phone uploads under the Git-ignored `.data/uploads` directory. Enforce the bundled count and size limits, and never expose that directory through the static-file server.
 8. Allow phone downloads only for absolute local files explicitly linked by an assistant message in the selected task. Resolve the file from the task again on every request; never expose a general path-based download endpoint.
+9. When creating a project folder remotely, require an existing parent directory and a single safe child name. Reject separators and Windows reserved names. The default `New project` name may advance to `New project 2`, `New project 3`, and so on when needed.
 
-中文要点：服务在远程模式下只监听 `127.0.0.1`，只通过用户批准的私有网络发布；访问令牌、设备名、私网域名、用户名、绝对路径、任务 ID、截图和终端输出都属于隐私数据；不要用第二个 App Server writer 绕过 `active writer`；手机上传必须保存在 Git 忽略的 `.data/uploads` 中，并执行数量与大小限制；下载只允许访问所选任务中由 Codex 回复明确链接的绝对路径文件，每次请求都要重新从任务内容核对，不能提供任意路径下载接口。
+中文要点：服务在远程模式下只监听 `127.0.0.1`，只通过用户批准的私有网络发布；访问令牌、设备名、私网域名、用户名、绝对路径、任务 ID、截图和终端输出都属于隐私数据；不要用第二个 App Server writer 绕过 `active writer`；手机上传必须保存在 Git 忽略的 `.data/uploads` 中，并执行数量与大小限制；下载只允许访问所选任务中由 Codex 回复明确链接的绝对路径文件，每次请求都要重新从任务内容核对，不能提供任意路径下载接口；远程创建项目时只允许在已存在的父目录下创建一个安全的子目录，默认 `New project` 重名时可依次使用 `New project 2`、`New project 3`。
 
 ## Completion criteria / 完成标准
 
@@ -44,6 +45,7 @@ Do not report success until all applicable checks pass:
 - Tailscale reports the HTTPS Serve route and both devices use the same tailnet.
 - a benign test message reaches the selected existing desktop task.
 - a benign file explicitly returned by Codex downloads successfully, while an unreferenced file id is rejected.
+- a new project folder can be created and the first turn receives its selected attachments without requiring a preliminary text-only message.
 - the phone UI loads over HTTPS and can be installed as a PWA when requested.
 
 Report the install directory, how to start and stop it, the private access method, and any remaining limitation. Redact secrets and private identifiers in the report.

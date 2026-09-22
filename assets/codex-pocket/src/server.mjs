@@ -9,6 +9,7 @@ import { promisify } from "node:util";
 import { AppServerClient } from "./app-server-client.mjs";
 import { CodexAppToolsClient } from "./codex-app-tools-client.mjs";
 import { buildDesktopPrompt, decodeAttachments, extractReturnedFiles, MAX_MESSAGE_BODY_BYTES, saveAttachments } from "./attachments.mjs";
+import { prepareProjectDirectory } from "./projects.mjs";
 
 const execFileAsync = promisify(execFile);
 const rootDir = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -80,15 +81,21 @@ async function handleApi(request, response, url) {
   }
 
   if (method === "POST" && url.pathname === "/api/threads") {
-    const body = await readJsonBody(request);
+    const body = await readJsonBody(request, MAX_MESSAGE_BODY_BYTES);
     const cwd = String(body.cwd || "").trim();
     const text = String(body.text || "").trim();
-    if (!cwd || !text) return json(response, 400, { error: "项目目录和任务要求都不能为空。" });
+    const incomingAttachments = decodeAttachments(body.attachments);
+    if (!cwd || (!text && !incomingAttachments.length)) return json(response, 400, { error: "请选择项目位置，并输入任务要求或添加附件。" });
     if (cwd.length > 1000 || text.length > 8000) return json(response, 400, { error: "项目目录或任务要求过长。" });
-    const info = await stat(cwd).catch(() => null);
-    if (!info?.isDirectory()) return json(response, 400, { error: "项目目录不存在，或不是文件夹。" });
-    const result = await bridge.startThread(resolve(cwd), text);
-    return json(response, 201, { created: true, ...result });
+    const projectDir = await prepareProjectDirectory({ cwd, createProject: body.createProject === true, projectName: body.projectName });
+    const savedAttachments = await saveAttachments({ attachments: incomingAttachments, dataDir, threadId: `new-${Date.now()}` });
+    const result = await bridge.startThread(projectDir, text || "请查看并处理我发送的附件。", savedAttachments);
+    return json(response, 201, {
+      created: true,
+      cwd: projectDir,
+      attachments: savedAttachments.map(({ name, type, size }) => ({ name, type, size })),
+      ...result,
+    });
   }
 
   const downloadMatch = url.pathname.match(/^\/api\/threads\/([^/]+)\/downloads\/([^/]+)$/);

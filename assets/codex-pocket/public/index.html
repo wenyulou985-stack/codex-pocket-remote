@@ -104,11 +104,25 @@
           <button id="close-new-task" class="icon-button" type="button" aria-label="关闭">×</button>
         </div>
         <p class="muted">从 Pocket 启动的任务可以持续显示运行状态，并在执行中接收你的新要求。</p>
-        <label for="task-cwd">项目文件夹</label>
+        <label for="task-cwd" id="task-cwd-label">已有项目文件夹</label>
         <input id="task-cwd" name="cwd" list="recent-cwds" placeholder="C:\\Projects\\my-project" required />
         <datalist id="recent-cwds"></datalist>
+        <label class="task-create-option" for="create-project-folder">
+          <input id="create-project-folder" type="checkbox" />
+          <span><strong>创建新的项目文件夹</strong><small>把上面的路径作为父目录</small></span>
+        </label>
+        <div id="project-name-field" class="project-name-field" hidden>
+          <label for="project-name">新文件夹名称</label>
+          <input id="project-name" maxlength="100" value="New project" placeholder="New project" />
+        </div>
         <label for="task-prompt">任务要求</label>
-        <textarea id="task-prompt" name="text" rows="5" maxlength="8000" placeholder="告诉 Codex 要完成什么…" required></textarea>
+        <textarea id="task-prompt" name="text" rows="5" maxlength="8000" placeholder="告诉 Codex 要完成什么，也可以只添加附件…"></textarea>
+        <div id="new-task-attachment-list" class="attachment-list new-task-attachment-list" aria-live="polite" hidden></div>
+        <div class="new-task-attachment-picker">
+          <input id="new-task-attachment-input" class="sr-only" type="file" multiple />
+          <button id="new-task-attach" class="secondary" type="button">＋ 添加照片或文件</button>
+          <span class="muted">最多 5 个，合计 25 MB</span>
+        </div>
         <button id="create-task" class="primary" type="submit">启动任务</button>
         <p id="new-task-error" class="error-text" role="alert"></p>
       </form>
